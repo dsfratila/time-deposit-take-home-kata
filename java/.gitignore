@@ -1,0 +1,53 @@
+# Maven build output and release files
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.flattened-pom.xml
+
+# Compiled classes, logs, and JVM diagnostics
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+*.hprof
+*.jfr
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Eclipse and Spring Tool Suite
+.classpath
+.project
+.settings/
+.factorypath
+.springBeans
+.sts4-cache/
+bin/
+
+# NetBeans and VS Code
+nbproject/private/
+nbbuild/
+nbdist/
+.vscode/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
