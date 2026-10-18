@@ -1,5 +1,8 @@
 package org.ikigaidigital;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class TimeDeposit {
     private int id;
     private String planType;
@@ -27,7 +30,19 @@ public class TimeDeposit {
         return days;
     }
 
-    public void setBalance(Double balance) {
-        this.balance = balance;
+    public void setBalance(Double newBalance) {
+        this.balance = newBalance;
+    }
+
+    public void accrueMonthlyInterest() {
+        double interest = 0;
+        if (days > 30) {
+            interest = TimeDepositPlan.forPlan(planType).calculateInterest(balance, days);
+        }
+
+        // Preserve legacy floating-point arithmetic and round only the interest, not the balance.
+        double roundedInterest = new BigDecimal(interest)
+                .setScale(2, RoundingMode.HALF_UP).doubleValue();
+        setBalance(balance + roundedInterest);
     }
 }

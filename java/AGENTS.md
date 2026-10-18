@@ -5,13 +5,13 @@
 - This directory holds the Java implementation. Read `../README.md` before implementing behavior; it defines the assignment, interest rules, and submission constraints. The requirements below specify the target implementation stack and engineering conventions.
 - Expose exactly two business REST endpoints: retrieve all time deposits with withdrawals, and update all time deposit balances. Provide an OpenAPI/Swagger contract and invocation instructions.
 - Preserve the public API of `org.ikigaidigital.TimeDeposit`, including its existing constructor, ID type, getters, and balance setter. Preserve `TimeDepositCalculator.updateBalance(List<TimeDeposit>)` and its existing calculation behavior.
-- Keep persistence entities and API DTOs separate from the shared class where needed to preserve compatibility. Do not silently narrow TSID values to the shared class's `int` ID; resolve and document that mapping before implementing persistence integration.
+- Keep persistence entities and API DTOs separate from the shared class where needed to preserve compatibility. Preserve the existing model structure and its `int` ID type.
 - Preserve the existing interest eligibility boundaries and rounding behavior. Use characterization tests before refactoring calculations.
 
 ## Target stack and design
 
 - Use Java 25, Maven, Spring Boot 4, Spring Data JPA, and the compatible Hibernate Types/Hypersistence library.
-- Verify dependency compatibility with Spring Boot 4 and its Hibernate version before choosing artifacts. Use the library's `@Tsid` annotation for generated persistent entity IDs.
+- Verify dependency compatibility with Spring Boot 4 and its Hibernate version before choosing artifacts.
 - Follow hexagonal architecture: keep interest calculation independent of HTTP and persistence, put orchestration in application services, and implement external concerns in adapters.
 - Apply SOLID principles and clean code practices. Make interest rules extensible through focused policies or strategies without adding speculative abstractions.
 - Prefer clear names and small methods over comments. Add comments only to explain non-obvious intent, constraints, or required assumptions; avoid comments that restate the code.
@@ -25,13 +25,14 @@
 - Put business behavior in aggregate methods, value objects, and interest policies. Use domain services only for domain behavior that does not naturally belong to one object. Keep application services focused on orchestration, transactions, and repository access.
 - Keep domain code independent of Spring, JPA, HTTP DTOs, and infrastructure. Application code depends on the domain and outbound interfaces; infrastructure implements those interfaces and maps external representations. Wire implementations in configuration.
 - Define repositories around aggregates and domain operations, including the locking semantics required by balance updates. Keep Spring Data interfaces and JPA entities inside the persistence adapter; expose domain types through repository contracts.
-- Use immutable value objects for concepts such as money and persistent identifiers where they clarify invariants. Keep TSID generation in persistence and preserve the existing shared `TimeDeposit` contract through explicit mapping.
+- Use immutable value objects for concepts such as money where they clarify invariants while preserving the existing shared `TimeDeposit` contract.
 - Retain the existing shared classes in `org.ikigaidigital` as compatibility entry points; delegate to the domain model or policies as needed without changing their public API or calculation behavior.
 - Keep controllers thin: map the OpenAPI contract to application use cases and map results back to HTTP responses. Keep persistence mapping in its adapter rather than sharing JPA entities with controllers.
 - Introduce domain events, additional bounded contexts, or additional ports only when a concrete requirement needs them. Keep context internals private where practical and communicate across contexts through explicit application interfaces.
 
 ## Persistence and concurrency
 
+- Use database-generated auto-incrementing integer primary keys compatible with the model's `int` ID. Configure JPA with `@GeneratedValue(strategy = GenerationType.IDENTITY)` and define the corresponding auto-increment columns in Liquibase.
 - Use Liquibase as the authority for schema creation and versioning; use JPA schema validation instead of automatic schema creation or updates.
 - Treat committed changesets as immutable. Introduce every subsequent schema or data migration in a new versioned changeset.
 - Give every changeset explicit preconditions appropriate to the affected objects or data so applying migrations to an existing database is safe. Liquibase tracks applied changesets; do not use `runAlways` or `runOnChange` as a substitute for versioning.
@@ -44,6 +45,7 @@
 - Follow contract-first TDD for every new or changed REST API behavior: first create or update the OpenAPI definition with the operation, request/response schemas, and status codes; then write an integration test against that contract before implementing the API behavior.
 - Run the integration test and confirm it fails because the requested behavior is missing (Red), implement the smallest change that makes it pass (Green), then refactor while keeping tests passing. Compilation errors or infrastructure failures do not count as the expected Red result. Repeat this cycle for each additional behavior, keeping the contract, tests, and implementation aligned.
 - Cover every REST endpoint with at least one integration test, including persisted effects for balance updates.
+- Use REST Assured to send HTTP requests in API integration tests and JsonUnit's AssertJ integration to assert JSON response bodies.
 - Create a reusable abstract integration test base annotated with `@SpringBootTest`; all integration tests extend it.
 - Run integration tests against a real database container using Testcontainers and Spring Boot integration (`@ServiceConnection`). Use the same database engine as the application and apply Liquibase migrations in tests.
 - Revert database changes made by tests. Use transaction rollback where the application work participates in the test transaction; for real HTTP requests or independently committed work, explicitly clean up committed data. Tests must run independently and without order dependencies.
