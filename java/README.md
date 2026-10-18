@@ -70,6 +70,26 @@ identities for databases initialized before the format conversion.
 Stop the application with Ctrl+C and stop PostgreSQL with `docker compose down`.
 The named Docker volume retains local database data between runs.
 
+## Architecture
+
+`core.domain` contains the interest plans and the framework-independent
+`TimeDepositRepository` outbound port. `infra.outbound.repo` implements that port with
+`JpaTimeDepositRepositoryAdapter`, backed by the Spring Data repository, and owns
+the JPA balance converter. Application use cases should depend on the domain
+port rather than the Spring Data interface.
+
+`TimeDeposit` and `TimeDepositPlan` belong to `core.domain`, and
+`TimeDepositCalculator` belongs to `core.business`. Their tests use matching
+packages. `TimeDeposit` retains its constructor, method signatures, and JPA
+mapping. Its converter reference is the explicit infrastructure dependency
+documented in AGENTS.md. Interest calculations and rounding are unchanged.
+
+There are no application services or REST controllers yet. Add orchestration in
+`core.business` and HTTP adapters and response DTOs in `infra.inbound.web` when implementing those
+use cases. The repository integration test verifies Spring wiring, generated
+IDs, and decimal persistence through the domain port against PostgreSQL; its
+transaction is rolled back after the test.
+
 ## AI-assisted workflow
 
 Use Codex with this directory as its workspace and load [AGENTS.md](AGENTS.md)
@@ -77,7 +97,8 @@ as the repository instructions. Provide the requested change, then validate the
 result using Java 25 with `mvn verify checkstyle:check`. This workflow requires no
 additional agent services or credentials. AI assistance was used to configure
 Spring Boot startup, PostgreSQL, Liquibase migrations, and database integration
-tests; the tests exercise the resulting setup against a real database.
+tests, and to separate the domain repository port from its JPA adapter; the tests
+exercise the resulting setup against a real database.
 
 Maven requires Java 25, compiles with `--release 25`, and checks production and
 test sources against `checkstyle/openjdk_checks.xml` during validation. Run the

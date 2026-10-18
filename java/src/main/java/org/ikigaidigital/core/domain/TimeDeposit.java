@@ -1,9 +1,8 @@
-package org.ikigaidigital;
+package org.ikigaidigital.core.domain;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import org.ikigaidigital.domain.TimeDepositBalanceConverter;
-import org.ikigaidigital.domain.TimeDepositPlan;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;

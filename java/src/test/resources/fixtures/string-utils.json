@@ -1,0 +1,6 @@
+{
+  "id": "${json-unit.any-number}",
+  "reference": "${json-unit.any-string}",
+  "active": "${json-unit.any-boolean}",
+  "message": "café"
+}

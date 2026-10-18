@@ -1,4 +1,4 @@
-package org.ikigaidigital.domain;
+package org.ikigaidigital.core.domain;
 
 public enum TimeDepositPlan {
     BASIC("basic", 0.01, 31, Integer.MAX_VALUE),

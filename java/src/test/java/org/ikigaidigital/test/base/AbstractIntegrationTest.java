@@ -1,4 +1,4 @@
-package org.ikigaidigital;
+package org.ikigaidigital.test.base;
 
 import org.ikigaidigital.infra.TimeDepositApplication;
 import org.springframework.boot.test.context.SpringBootTest;

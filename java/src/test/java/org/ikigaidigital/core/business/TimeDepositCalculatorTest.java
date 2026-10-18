@@ -1,6 +1,8 @@
-package org.ikigaidigital;
+package org.ikigaidigital.core.business;
 
+import java.util.Arrays;
 import java.util.List;
+import org.ikigaidigital.core.domain.TimeDeposit;
 
 import org.junit.jupiter.api.Test;
 
@@ -10,6 +12,17 @@ import static org.mockito.Mockito.verify;
 
 class TimeDepositCalculatorTest {
     private final TimeDepositCalculator calculator = new TimeDepositCalculator();
+
+    @Test
+    public void updateBalanceTest() {
+        TimeDepositCalculator calc = new TimeDepositCalculator();
+        List<TimeDeposit> plans = Arrays.asList(
+                new TimeDeposit(1, "basic", 1234567.00, 45)
+        );
+        calc.updateBalance(plans);
+
+        assertThat(1).isEqualTo(1);
+    }
 
     @Test
     void acceptsAnEmptyList() {

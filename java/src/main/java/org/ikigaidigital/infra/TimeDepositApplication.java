@@ -1,11 +1,11 @@
 package org.ikigaidigital.infra;
 
-import org.ikigaidigital.TimeDeposit;
+import org.ikigaidigital.core.domain.TimeDeposit;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
 
-@SpringBootApplication(scanBasePackageClasses = TimeDeposit.class)
+@SpringBootApplication(scanBasePackages = "org.ikigaidigital")
 @EntityScan(basePackageClasses = TimeDeposit.class)
 public class TimeDepositApplication {
 

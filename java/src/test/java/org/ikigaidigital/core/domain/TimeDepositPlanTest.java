@@ -1,4 +1,4 @@
-package org.ikigaidigital.domain;
+package org.ikigaidigital.core.domain;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;

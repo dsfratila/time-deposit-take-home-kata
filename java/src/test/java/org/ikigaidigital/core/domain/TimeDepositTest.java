@@ -1,5 +1,6 @@
-package org.ikigaidigital;
+package org.ikigaidigital.core.domain;
 
+import org.ikigaidigital.test.mother.TimeDepositMother;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;

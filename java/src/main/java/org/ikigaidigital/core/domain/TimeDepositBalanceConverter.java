@@ -1,4 +1,4 @@
-package org.ikigaidigital.domain;
+package org.ikigaidigital.core.domain;
 
 import java.math.BigDecimal;
 import jakarta.persistence.AttributeConverter;
