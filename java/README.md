@@ -21,7 +21,11 @@ mvn clean verify
 Integration tests start PostgreSQL 18.3 using Testcontainers and apply the same
 Liquibase migrations as the application. Maven runs unit tests with Surefire and
 `*IntegrationTest` classes with Failsafe during `verify`. Database writes in these
-tests are rolled back.
+tests are rolled back or explicitly cleaned up after real HTTP requests.
+The shared integration test base uses `DatabaseHelper` to reset application tables
+and identity sequences before each test and clean up data afterward. Bulk test
+data is loaded from classpath SQL fixtures through the same helper; schema and
+Liquibase history are retained.
 
 ## Start the application
 
@@ -35,8 +39,23 @@ mvn spring-boot:run
 The application listens on `http://localhost:8080`. Check startup with
 `curl http://localhost:8080/actuator/health`; the response should contain
 `"status":"UP"`. Swagger UI is available at
-`http://localhost:8080/swagger-ui/index.html`. Business endpoints have not yet
-been implemented.
+`http://localhost:8080/swagger-ui/index.html`, using the contract at
+`http://localhost:8080/openapi.yaml`.
+
+Retrieve all time deposits with:
+
+```sh
+curl http://localhost:8080/time-deposits
+```
+
+The endpoint returns HTTP 200 and a JSON array ordered by ascending deposit ID,
+or `[]` when the database is empty. Each item contains `id`, `planType`, numeric
+`balance`, integer `days`, and `withdrawals`. Withdrawals contain `id`, numeric
+`amount`, and a `YYYY-MM-DD` date, ordered by ascending withdrawal ID; deposits
+without withdrawals return an empty array. Plan names are returned as stored.
+This operation does not accrue interest or change balances, and has no pagination
+or filtering. The authoritative OpenAPI contract is
+[`src/main/resources/static/openapi.yaml`](src/main/resources/static/openapi.yaml).
 
 Alternatively, run the executable JAR after `mvn verify`:
 
@@ -61,8 +80,9 @@ identifiers, including `"timeDeposits"`, `"planType"`, and `"timeDepositId"`.
 Both primary keys are auto-incrementing integers. Monetary columns use
 `DECIMAL(19,2)`, assuming two fractional digits for the assignment's currency.
 Required columns are non-null, and withdrawals reference an existing deposit.
-Migrations halt on unexpected existing tables instead of treating an unverified
-schema as compatible. Applied migrations are tracked by Liquibase and are not
+Migration preconditions mark existing tables as already applied and halt on
+errors evaluating the preconditions. Hibernate validates the resulting schema.
+Applied migrations are tracked by Liquibase and are not
 reapplied on restart; add new XML changesets for future schema changes. The XML
 changelogs retain the original YAML logical file paths to preserve migration
 identities for databases initialized before the format conversion.
@@ -72,23 +92,24 @@ The named Docker volume retains local database data between runs.
 
 ## Architecture
 
-`core.domain` contains the interest plans and the framework-independent
-`TimeDepositRepository` outbound port. `infra.outbound.repo` implements that port with
-`JpaTimeDepositRepositoryAdapter`, backed by the Spring Data repository, and owns
-the JPA balance converter. Application use cases should depend on the domain
-port rather than the Spring Data interface.
+`core.domain` contains the `TimeDeposit` aggregate, its `Withdrawal` children,
+`TimeDepositPlan` interest rules, and the JPA balance converter. The shared
+constructor, getters, balance setter, interest calculations, and rounding remain
+compatible. Withdrawals use decimal amounts and calendar dates.
 
-`TimeDeposit` and `TimeDepositPlan` belong to `core.domain`, and
-`TimeDepositCalculator` belongs to `core.business`. Their tests use matching
-packages. `TimeDeposit` retains its constructor, method signatures, and JPA
-mapping. Its converter reference is the explicit infrastructure dependency
-documented in AGENTS.md. Interest calculations and rounding are unchanged.
+`core.business` contains `TimeDepositCalculator` and `TimeDepositsService`.
+The listing service owns the read-only transaction, maps entities to response
+DTOs within that transaction, and calls the existing Spring
+Data `TimeDepositRepository` in `infra.outbound.repo`. Its fetch join loads deposits
+and their normally lazy withdrawals in one query, including deposits without
+withdrawals. An integration test clears the persistence context and verifies the
+query count while accessing children of multiple deposits.
 
-There are no application services or REST controllers yet. Add orchestration in
-`core.business` and HTTP adapters and response DTOs in `infra.inbound.web` when implementing those
-use cases. The repository integration test verifies Spring wiring, generated
-IDs, and decimal persistence through the domain port against PostgreSQL; its
-transaction is rolled back after the test.
+`infra.inbound.web.TimeDepositController` maps HTTP requests to the service and
+returns its deposit and withdrawal DTOs directly. Persistence entities are
+not serialized directly. HTTP integration tests verify stored values, ordering,
+withdrawal associations and empty results against
+PostgreSQL with Liquibase migrations.
 
 ## AI-assisted workflow
 
@@ -97,8 +118,10 @@ as the repository instructions. Provide the requested change, then validate the
 result using Java 25 with `mvn verify checkstyle:check`. This workflow requires no
 additional agent services or credentials. AI assistance was used to configure
 Spring Boot startup, PostgreSQL, Liquibase migrations, and database integration
-tests, and to separate the domain repository port from its JPA adapter; the tests
-exercise the resulting setup against a real database.
+tests. For the listing endpoint, AI assistance clarified the response contract,
+recorded domain vocabulary, wrote OpenAPI and HTTP tests before implementation,
+confirmed HTTP 404 failures, and implemented the service, fetch plan, and DTOs.
+The tests exercise the resulting setup against a real database.
 
 Maven requires Java 25, compiles with `--release 25`, and checks production and
 test sources against `checkstyle/openjdk_checks.xml` during validation. Run the

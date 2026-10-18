@@ -1,0 +1,58 @@
+openapi: 3.0.3
+info:
+  title: Time deposit API
+  version: 1.0.0
+paths:
+  /time-deposits:
+    get:
+      operationId: listTimeDeposits
+      summary: Retrieve all time deposits
+      description: Returns stored balances without accruing interest. No pagination or filtering.
+      responses:
+        '200':
+          description: All deposits in ascending ID order, or an empty array when none exist.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeDepositResponse'
+components:
+  schemas:
+    TimeDepositResponse:
+      type: object
+      additionalProperties: false
+      required: [id, planType, balance, days, withdrawals]
+      properties:
+        id:
+          type: integer
+          format: int32
+        planType:
+          type: string
+          description: Stored plan name, including unrecognized plan names.
+          example: basic
+        balance:
+          type: number
+          multipleOf: 0.01
+        days:
+          type: integer
+          format: int32
+        withdrawals:
+          type: array
+          description: Associated withdrawals in ascending ID order; empty when none exist.
+          items:
+            $ref: '#/components/schemas/WithdrawalResponse'
+    WithdrawalResponse:
+      type: object
+      additionalProperties: false
+      required: [id, amount, date]
+      properties:
+        id:
+          type: integer
+          format: int32
+        amount:
+          type: number
+          multipleOf: 0.01
+        date:
+          type: string
+          format: date

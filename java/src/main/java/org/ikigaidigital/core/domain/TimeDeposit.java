@@ -2,6 +2,8 @@ package org.ikigaidigital.core.domain;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -9,6 +11,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
 @Entity
@@ -27,6 +31,10 @@ public class TimeDeposit {
 
     @Column(nullable = false)
     private int days;
+
+    @OneToMany(mappedBy = "timeDeposit")
+    @OrderBy("id ASC")
+    private List<Withdrawal> withdrawals = new ArrayList<>();
 
     protected TimeDeposit() {
     }
@@ -50,6 +58,10 @@ public class TimeDeposit {
 
     public int getDays() {
         return days;
+    }
+
+    public List<Withdrawal> getWithdrawals() {
+        return List.copyOf(withdrawals);
     }
 
     public void setBalance(Double newBalance) {

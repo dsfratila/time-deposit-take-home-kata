@@ -1,0 +1,28 @@
+[
+  {
+    "id": "${json-unit.any-number}",
+    "planType": "basic",
+    "balance": 1234.56,
+    "days": 90,
+    "withdrawals": [
+      {"id": "${json-unit.any-number}", "amount": 12.34, "date": "2026-10-01"},
+      {"id": "${json-unit.any-number}", "amount": 5.67, "date": "2026-09-30"}
+    ]
+  },
+  {
+    "id": "${json-unit.any-number}",
+    "planType": "custom-plan",
+    "balance": 0.0,
+    "days": 0,
+    "withdrawals": []
+  },
+  {
+    "id": "${json-unit.any-number}",
+    "planType": "premium",
+    "balance": 9876.54,
+    "days": 365,
+    "withdrawals": [
+      {"id": "${json-unit.any-number}", "amount": 99.99, "date": "2026-10-02"}
+    ]
+  }
+]
