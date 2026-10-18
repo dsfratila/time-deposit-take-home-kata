@@ -28,7 +28,8 @@ public class TimeDepositsService {
     public void accrueInterest() {
         // Fix membership at selection time; later inserts belong to the next run.
         List<Integer> ids = repository.findAllIds();
-        // Batches commit independently; stop on failure without undoing earlier commits; for now we omit to save state
+        // Batches commit independently; stop on failure without undoing earlier commits.
+        // For now we omit to save state.
         for (int start = 0; start < ids.size(); start += ACCRUAL_BATCH_SIZE) {
             int end = Math.min(start + ACCRUAL_BATCH_SIZE, ids.size());
             accrualService.accrueInterest(ids.subList(start, end));
