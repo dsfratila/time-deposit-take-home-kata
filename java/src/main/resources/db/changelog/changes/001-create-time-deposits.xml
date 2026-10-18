@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                   logicalFilePath="db/changelog/changes/001-create-time-deposits.yaml">
+
+    <changeSet id="001-create-time-deposits" author="time-deposit">
+        <preConditions onFail="MARK_RAN" onError="HALT">
+            <not>
+                <tableExists tableName="timeDeposits"/>
+            </not>
+        </preConditions>
+        <createTable tableName="timeDeposits">
+            <column name="id" type="INTEGER" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_time_deposits" nullable="false"/>
+            </column>
+            <column name="planType" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="days" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="balance" type="DECIMAL(19,2)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="timeDeposits"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

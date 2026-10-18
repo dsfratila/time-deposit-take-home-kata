@@ -21,12 +21,28 @@
 
 ## Java structure and DDD boundaries
 
+Use the following package structure beneath the project's base package (`org.ikigaidigital`):
+
+```text
+project
+├── api
+├── business
+├── domain
+└── infra
+    └── repo
+```
+
+- `api`: REST controllers, API DTOs, and HTTP mapping to application use cases.
+- `services`: application services that orchestrate use cases, transactions, and repository access.
+- `domain`: aggregates, value objects, interest policies, and repository contracts; keep this package independent of Spring, JPA, and HTTP.
+- `infra`: external adapters and configuration that wires implementations to contracts. Put Spring Data repositories, JPA entities, and persistence mapping in `infra.repo`.
+- Keep `TimeDeposit` and `TimeDepositCalculator` in `org.ikigaidigital`, outside these subpackages. Map `TimeDeposit` directly as a JPA entity while preserving its existing public API and calculation behavior; keep its Spring Data repository and persistence converters in `infra.repo`. Keep `TimeDepositCalculator` unchanged. This shared entity is an exception to the rule that JPA entities belong inside the persistence adapter.
+
 - Use domain language consistently in packages, types, and methods. Model the time deposit as an aggregate root that controls its balance and withdrawal invariants; treat withdrawals as part of that aggregate unless requirements justify a separate boundary.
 - Put business behavior in aggregate methods, value objects, and interest policies. Use domain services only for domain behavior that does not naturally belong to one object. Keep application services focused on orchestration, transactions, and repository access.
 - Keep domain code independent of Spring, JPA, HTTP DTOs, and infrastructure. Application code depends on the domain and outbound interfaces; infrastructure implements those interfaces and maps external representations. Wire implementations in configuration.
 - Define repositories around aggregates and domain operations, including the locking semantics required by balance updates. Keep Spring Data interfaces and JPA entities inside the persistence adapter; expose domain types through repository contracts.
 - Use immutable value objects for concepts such as money where they clarify invariants while preserving the existing shared `TimeDeposit` contract.
-- Retain the existing shared classes in `org.ikigaidigital` as compatibility entry points; delegate to the domain model or policies as needed without changing their public API or calculation behavior.
 - Keep controllers thin: map the OpenAPI contract to application use cases and map results back to HTTP responses. Keep persistence mapping in its adapter rather than sharing JPA entities with controllers.
 - Introduce domain events, additional bounded contexts, or additional ports only when a concrete requirement needs them. Keep context internals private where practical and communicate across contexts through explicit application interfaces.
 
@@ -34,9 +50,10 @@
 
 - Use database-generated auto-incrementing integer primary keys compatible with the model's `int` ID. Configure JPA with `@GeneratedValue(strategy = GenerationType.IDENTITY)` and define the corresponding auto-increment columns in Liquibase.
 - Use Liquibase as the authority for schema creation and versioning; use JPA schema validation instead of automatic schema creation or updates.
+- Write all Liquibase changelogs and changesets in XML.
 - Treat committed changesets as immutable. Introduce every subsequent schema or data migration in a new versioned changeset.
 - Give every changeset explicit preconditions appropriate to the affected objects or data so applying migrations to an existing database is safe. Liquibase tracks applied changesets; do not use `runAlways` or `runOnChange` as a substitute for versioning.
-- Choose precondition failure behavior deliberately: skip only when the intended state already exists, and halt for incompatible state or errors.
+- Configure changeset preconditions with `onFail="MARK_RAN"`: a failed precondition means the intended change is already applied, so Liquibase records the changeset as executed without running it. Write preconditions so failure identifies that existing state. Use `onError="HALT"` for errors while evaluating preconditions.
 - Execute account balance changes within a transaction using pessimistic write locking. Acquire the lock before reading the balance used for calculation and retain it until commit or rollback.
 - For updates involving multiple accounts, acquire locks in a deterministic order to reduce deadlocks.
 

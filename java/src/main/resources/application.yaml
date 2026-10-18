@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: time-deposit
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/time_deposit}
+    username: ${DB_USERNAME:time_deposit}
+    password: ${DB_PASSWORD:time_deposit}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    properties:
+      hibernate:
+        globally_quoted_identifiers: true
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+server:
+  port: ${PORT:8080}

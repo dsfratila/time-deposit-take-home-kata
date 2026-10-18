@@ -1,6 +1,6 @@
-package org.ikigaidigital;
+package org.ikigaidigital.domain;
 
-enum TimeDepositPlan {
+public enum TimeDepositPlan {
     BASIC("basic", 0.01, 31, Integer.MAX_VALUE),
     STUDENT("student", 0.03, 31, 365),
     PREMIUM("premium", 0.05, 46, Integer.MAX_VALUE),
@@ -19,7 +19,7 @@ enum TimeDepositPlan {
         this.lastEligibleDay = lastEligibleDay;
     }
 
-    static TimeDepositPlan forPlan(String planType) {
+    public static TimeDepositPlan forPlan(String planType) {
         for (TimeDepositPlan plan : values()) {
             if (planType.equals(plan.planType)) {
                 return plan;
@@ -28,7 +28,7 @@ enum TimeDepositPlan {
         return NONE;
     }
 
-    double calculateInterest(double currentBalance, int days) {
+    public double calculateInterest(double currentBalance, int days) {
         if (this == NONE || days < firstEligibleDay || days > lastEligibleDay) {
             return 0;
         }

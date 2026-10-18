@@ -2,12 +2,35 @@ package org.ikigaidigital;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import org.ikigaidigital.domain.TimeDepositBalanceConverter;
+import org.ikigaidigital.domain.TimeDepositPlan;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
+@Entity
+@Table(name = "timeDeposits")
 public class TimeDeposit {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Column(name = "planType", nullable = false)
     private String planType;
+
+    @Convert(converter = TimeDepositBalanceConverter.class)
+    @Column(nullable = false, precision = 19, scale = 2)
     private Double balance;
+
+    @Column(nullable = false)
     private int days;
+
+    protected TimeDeposit() {
+    }
 
     public TimeDeposit(int id, String planType, Double balance, int days) {
         this.id = id;
