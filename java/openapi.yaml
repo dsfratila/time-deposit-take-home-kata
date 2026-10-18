@@ -17,6 +17,26 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/TimeDepositResponse'
+  /time-deposits/interest-accruals:
+    post:
+      operationId: accrueInterest
+      summary: Accrue monthly interest for all time deposits
+      description: >-
+        Synchronously applies the existing monthly interest rules to deposits selected
+        at the start of the operation in sequential batches of at most 500 deposits.
+        Each batch commits independently. If a batch fails, it rolls back, earlier
+        batches remain committed, and later batches are skipped. Days and withdrawals
+        are unchanged. Requests accrue again on stored balances, including retries
+        after partial failure; there is no calendar-period tracking or deduplication.
+        Deposits inserted after selection are processed by a subsequent request.
+        No request body is required.
+      responses:
+        '204':
+          description: All batches committed successfully, including for an empty database.
+        '500':
+          description: >-
+            Interest accrual failed. The failing batch rolled back, earlier batches
+            may already have committed, and later batches were not processed.
 components:
   schemas:
     TimeDepositResponse:

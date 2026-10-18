@@ -1,6 +1,6 @@
 package org.ikigaidigital.test.base;
 
-import org.ikigaidigital.infra.TimeDepositApplication;
+import org.ikigaidigital.TimeDepositApplication;
 import org.ikigaidigital.test.util.DatabaseHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

@@ -16,7 +16,8 @@ import static org.mockito.Mockito.when;
 
 class TimeDepositsServiceTest {
     private final TimeDepositRepository repository = mock(TimeDepositRepository.class);
-    private final TimeDepositsService service = new TimeDepositsService(repository);
+    private final TimeDepositsAccrualService batchService = mock(TimeDepositsAccrualService.class);
+    private final TimeDepositsService service = new TimeDepositsService(repository, batchService);
 
     @Test
     void mapsDepositsAndTheirWithdrawalsToDtosInRepositoryOrder() {

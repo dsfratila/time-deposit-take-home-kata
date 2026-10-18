@@ -55,7 +55,31 @@ or `[]` when the database is empty. Each item contains `id`, `planType`, numeric
 without withdrawals return an empty array. Plan names are returned as stored.
 This operation does not accrue interest or change balances, and has no pagination
 or filtering. The authoritative OpenAPI contract is
-[`src/main/resources/static/openapi.yaml`](src/main/resources/static/openapi.yaml).
+[`openapi.yaml`](openapi.yaml).
+
+Apply monthly interest to all time deposits with:
+
+```sh
+curl -i -X POST http://localhost:8080/time-deposits/interest-accruals
+```
+
+This endpoint accepts no request body and returns HTTP 204 with no response body
+after all balance changes commit, including when no deposits exist. It applies
+the existing plan eligibility and rounding rules without changing elapsed days or
+withdrawals. Requests accrue again on the stored balances; there is no
+calendar-month tracking or retry deduplication, so retrying after a lost response
+or a partial failure can accrue interest twice. Use the existing GET endpoint to inspect
+the resulting balances. Both operations are also available through Swagger UI.
+
+The operation runs synchronously for the kata's small dataset. It selects deposit
+IDs once, leaving deposits inserted afterward for a subsequent run. IDs remain in
+memory and are processed sequentially in batches of at most 500. Each batch runs
+in its own transaction, locking deposits in ascending ID order before reading
+balances and retaining locks until that batch commits or rolls back. If a batch
+fails, it rolls back, earlier batches remain committed, and later batches are
+skipped; the endpoint returns HTTP 500. Concurrent requests can interleave between
+batches, while locks ensure calculations use the latest committed balances. See
+[the batch transaction decision](docs/adr/0002-independent-accrual-batches.md).
 
 Alternatively, run the executable JAR after `mvn verify`:
 
@@ -97,13 +121,24 @@ The named Docker volume retains local database data between runs.
 constructor, getters, balance setter, interest calculations, and rounding remain
 compatible. Withdrawals use decimal amounts and calendar dates.
 
-`core.business` contains `TimeDepositCalculator` and `TimeDepositsService`.
+`core.business` contains `TimeDepositCalculator`, `TimeDepositsService`, and
+`TimeDepositsAccrualService`.
 The listing service owns the read-only transaction, maps entities to response
 DTOs within that transaction, and calls the existing Spring
 Data `TimeDepositRepository` in `infra.outbound.repo`. Its fetch join loads deposits
 and their normally lazy withdrawals in one query, including deposits without
 withdrawals. An integration test clears the persistence context and verifies the
 query count while accessing children of multiple deposits.
+
+`TimeDepositsService` selects IDs and coordinates batches without starting a
+transaction for the whole run. It invokes the separate Spring-managed
+`TimeDepositsAccrualService`, whose `REQUIRES_NEW` transaction covers one batch,
+even when invoked from another transaction. The batch service loads only the
+specified deposits with pessimistic write locks, without fetching withdrawals,
+and delegates calculation to the injected `TimeDepositCalculator`. JPA persists
+the managed balance changes when each batch commits. Integration tests verify
+multiple full batches and a final partial batch, failure isolation, independent
+commits, and concurrent updates using the latest committed balances.
 
 `infra.inbound.web.TimeDepositController` maps HTTP requests to the service and
 returns its deposit and withdrawal DTOs directly. Persistence entities are
@@ -121,6 +156,12 @@ Spring Boot startup, PostgreSQL, Liquibase migrations, and database integration
 tests. For the listing endpoint, AI assistance clarified the response contract,
 recorded domain vocabulary, wrote OpenAPI and HTTP tests before implementation,
 confirmed HTTP 404 failures, and implemented the service, fetch plan, and DTOs.
+For the accrual endpoint, AI assistance clarified retry and transaction semantics,
+recorded the decision, wrote the OpenAPI contract and HTTP tests, confirmed HTTP
+404 failures before implementation, and added locking and rollback verification.
+AI assistance also planned and implemented independent batches of 500, confirmed
+the changed failure contract with a failing HTTP test, and verified partial
+success, batch rollback, transaction propagation, and locking.
 The tests exercise the resulting setup against a real database.
 
 Maven requires Java 25, compiles with `--release 25`, and checks production and

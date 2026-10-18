@@ -15,5 +15,9 @@ student, or premium.
 **Balance**:
 The monetary amount currently held in a time deposit.
 
+**Interest accrual**:
+The addition of one month's interest to a time deposit's balance under its plan's
+eligibility and rounding rules, without changing its elapsed duration or withdrawals.
+
 **Withdrawal**:
 A recorded amount withdrawn from a particular time deposit on a calendar date.

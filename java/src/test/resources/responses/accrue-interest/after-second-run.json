@@ -1,0 +1,10 @@
+[
+  {"id": 1, "planType": "basic", "balance": 1202.0, "days": 31,
+    "withdrawals": [{"id": 1, "amount": 12.34, "date": "2026-10-01"}]},
+  {"id": 2, "planType": "student", "balance": 1206.01, "days": 365, "withdrawals": []},
+  {"id": 3, "planType": "premium", "balance": 1210.02, "days": 46,
+    "withdrawals": [{"id": 2, "amount": 99.99, "date": "2026-10-02"}]},
+  {"id": 4, "planType": "basic", "balance": 1200.0, "days": 30, "withdrawals": []},
+  {"id": 5, "planType": "student", "balance": 1200.0, "days": 366, "withdrawals": []},
+  {"id": 6, "planType": "custom-plan", "balance": 1200.0, "days": 90, "withdrawals": []}
+]

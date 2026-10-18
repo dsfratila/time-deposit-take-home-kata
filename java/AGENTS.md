@@ -27,7 +27,7 @@ Production packages beneath `org.ikigaidigital` have these responsibilities:
 - `infra.outbound.repo`: Spring Data repositories, including `TimeDepositRepository`, which extends `JpaRepository<TimeDeposit, Integer>`.
 
 Use the source tree for the current class inventory. For REST changes, read
-[`src/main/resources/static/openapi.yaml`](src/main/resources/static/openapi.yaml)
+[`openapi.yaml`](openapi.yaml)
 and the corresponding HTTP integration test before editing the implementation.
 
 ### Dependencies and responsibilities

@@ -45,4 +45,24 @@ class TimeDepositRepositoryIntegrationTest extends AbstractIntegrationTest {
                         assertThat(withdrawal.getTimeDeposit()).isSameAs(deposit)));
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
     }
+
+    @Test
+    @Transactional
+    void locksOnlySelectedDepositsInIdOrderWithoutFetchingWithdrawals() {
+        database.insertData("fixtures/time-deposits/interest-accrual.sql");
+        final List<Integer> ids = repository.findAllIds();
+        database.insertData("fixtures/time-deposits/late-insert.sql");
+        entityManager.clear();
+        Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
+        statistics.clear();
+
+        List<TimeDeposit> deposits = repository.findAllByIdForUpdate(ids);
+
+        assertThat(ids).containsExactly(1, 2, 3, 4, 5, 6);
+        assertThat(deposits).extracting(TimeDeposit::getId).containsExactlyElementsOf(ids);
+        assertThat(deposits).allSatisfy(deposit ->
+                assertThat(entityManagerFactory.getPersistenceUnitUtil()
+                        .isLoaded(deposit, "withdrawals")).isFalse());
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
+    }
 }
